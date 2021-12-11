@@ -2,7 +2,7 @@
 
 ## Logger
 
-```
+```python
 import asyncio
 from redis_push import Logger
 
