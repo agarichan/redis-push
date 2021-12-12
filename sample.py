@@ -12,6 +12,7 @@ async def main():
         await logger.error(origin="sample")
 
     await logger.info(message="*テスト*")
+    await logger.close()
 
 
 asyncio.run(main())

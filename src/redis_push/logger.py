@@ -1,8 +1,19 @@
+import asyncio
+from functools import wraps
 from typing import Optional
 
+from .model.slack import ErrorMessage, Message
 from .redis import RedisList
 
-from .model.slack import ErrorMessage, Message
+
+def create_task(func):
+    @wraps(func)
+    async def wrap(self: "Logger", *args, **kwargs):
+        task = asyncio.create_task(func(self, *args, **kwargs))
+        self.tasks.append(task)
+        await asyncio.sleep(0)
+
+    return wrap
 
 
 class Logger:
@@ -10,11 +21,21 @@ class Logger:
         self.channel = channel
         self.error_channel = channel if error_channel is None else error_channel
         self.redis = RedisList()
+        self.tasks = []
 
-    async def error(self, origin: Optional[str]):
+    async def wait(self):
+        await asyncio.wait(self.tasks)
+
+    async def close(self):
+        await self.wait()
+        await self.redis.close()
+
+    @create_task
+    def error(self, origin: Optional[str] = None):
         em = ErrorMessage.from_exc_info(channel=self.error_channel, origin=origin)
-        await self.redis.lpush("slack", em)
+        return self.redis.lpush("slack", em)
 
-    async def info(self, message: str, mention: bool = False):
+    @create_task
+    def info(self, message: str, mention: bool = False):
         m = Message(channel=self.channel, message=message, mention=mention)
-        await self.redis.lpush("slack", m)
+        return self.redis.lpush("slack", m)
