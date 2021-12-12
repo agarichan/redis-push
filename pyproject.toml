@@ -1,7 +1,9 @@
 [tool.poetry]
 name = "redis-push"
 version = "0.0.0"
-description = ""
+description = "push data into redis follow protocol."
+homepage = "https://github.com/agarichan/redis-push"
+repository = "https://github.com/agarichan/redis-push"
 authors = ["agarichan"]
 
 [tool.poetry.dependencies]
