@@ -37,5 +37,6 @@ class Logger:
 
     @create_task
     def info(self, message: str, mention: bool = False):
+        print(message)
         m = Message(channel=self.channel, message=message, mention=mention)
         return self.redis.lpush("slack", m)
