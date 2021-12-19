@@ -3,6 +3,7 @@ from functools import wraps
 from typing import Optional
 
 from .model.slack import ErrorMessage, Message
+from .model.influxdb import Point, Points
 from .redis import RedisList
 
 
@@ -17,7 +18,7 @@ def create_task(func):
 
 
 class Logger:
-    def __init__(self, channel: str, error_channel: Optional[str] = None):
+    def __init__(self, channel: str = "test", error_channel: Optional[str] = None):
         self.channel = channel
         self.error_channel = channel if error_channel is None else error_channel
         self.redis = RedisList()
@@ -40,3 +41,8 @@ class Logger:
         print(message)
         m = Message(channel=self.channel, message=message, mention=mention)
         return self.redis.lpush("slack", m)
+
+    @create_task
+    def points(self, bucket: str, points: list[Point]):
+        ps = Points(bucket=bucket, records=points)
+        return self.redis.lpush("influxdb", ps)
